@@ -12,7 +12,8 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-HUB=gcr.io/google.com/zbutcher-test
+HUB := gcr.io/google.com/zbutcher-test
+SHELL := /bin/bash
 
 default: build
 
@@ -30,3 +31,14 @@ docker.run: docker.build
 
 docker.push: docker.build
 	gcloud docker -- push ${HUB}/test-server
+
+deploy.istio:
+	kubectl apply -f ./istio-0.4.0/install/kubernetes/istio.yaml
+
+deploy:
+	kubectl apply -f <(./istio-0.4.0/bin/istioctl kube-inject -f kubernetes/deployment.yaml)
+	kubectl apply -f kubernetes/service.yaml
+	kubectl apply -f kubernetes/ingress.yaml
+
+remove:
+	kubectl delete -f kubernetes/
