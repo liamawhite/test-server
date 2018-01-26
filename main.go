@@ -93,7 +93,7 @@ func live(delay time.Duration) func(w http.ResponseWriter, r *http.Request) {
 	live := time.Now().Add(delay)
 	log.Printf("will be live at %v given delay %v\n", live, delay)
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("got liveness request")
+		log.Printf("got liveness request with headers:     %v\n", r.Header)
 		if time.Now().After(live) {
 			w.Write([]byte("live"))
 		} else {
@@ -104,7 +104,7 @@ func live(delay time.Duration) func(w http.ResponseWriter, r *http.Request) {
 
 func health(healthy bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("got health check request")
+		log.Printf("got health check request with headers: %v\n", r.Header)
 		if healthy {
 			w.Write([]byte("healthy"))
 		} else {
@@ -114,7 +114,7 @@ func health(healthy bool) func(w http.ResponseWriter, r *http.Request) {
 }
 
 func echo(w http.ResponseWriter, r *http.Request) {
-	log.Printf("got echo request")
+	log.Printf("got echo request with headers:         %v\n", r.Header)
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
