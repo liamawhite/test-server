@@ -17,11 +17,15 @@ SHELL := /bin/bash
 
 default: build
 
+##### Go
+
 build:
 	go build .
 
 test-server.linux:
 	GOOS=linux go build -a --ldflags '-extldflags "-static"' -tags netgo -installsuffix netgo -o test-server .
+
+##### Docker
 
 docker.build: test-server.linux
 	docker build -t ${HUB}/test-server -f Dockerfile .
@@ -32,13 +36,24 @@ docker.run: docker.build
 docker.push: docker.build
 	gcloud docker -- push ${HUB}/test-server
 
-deploy.istio:
-	kubectl apply -f ./istio-0.4.0/install/kubernetes/istio.yaml
+##### Kube Deploy
 
 deploy:
 	kubectl apply -f <(./istio-0.4.0/bin/istioctl kube-inject -f kubernetes/deployment.yaml)
 	kubectl apply -f kubernetes/service.yaml
 	kubectl apply -f kubernetes/ingress.yaml
 
+deploy.istio:
+	kubectl apply -f ./istio-0.4.0/install/kubernetes/istio.yaml
+
+deploy-all: deploy.istio deploy
+
+##### Kube Delete
+
 remove:
-	kubectl delete -f kubernetes/
+	kubectl delete -f kubernetes/ || true
+
+remove.istio:
+	kubectl delete -f ./istio-0.4.0/install/kubernetes/istio.yaml || true
+
+remove-all: remove remove.istio
