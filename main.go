@@ -65,9 +65,10 @@ func main() {
 				wg.Add(1)
 
 				s := server
+				p := port
 				go func() {
-					log.Printf("Starting listener on port %d\n", port)
-					err := http.ListenAndServe(toAddress(port), s)
+					log.Printf("Starting listener on port %d\n", p)
+					err := http.ListenAndServe(toAddress(p), s)
 					log.Printf("%v\n", err)
 					wg.Done()
 				}()

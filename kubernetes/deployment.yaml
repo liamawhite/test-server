@@ -17,23 +17,24 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        - containerPort: 81
         args:
         - --server-port=80
-        - --health-port=80
-        - --liveness-port=80
+        - --health-port=81
+        - --liveness-port=81
         # update to make the health check return unhealthy
         - --healthy=true
         # update to make liveness checks take longer before returning a 200
-        - --liveness-delay=3s
+        - --liveness-delay=0s
         livenessProbe:
           httpGet:
             path: /live
-            port: 80
-          initialDelaySeconds: 2
-          periodSeconds: 2
+            port: 81
+          initialDelaySeconds: 5
+          periodSeconds: 5
         readinessProbe:
           httpGet:
             path: /health
-            port: 80
-          initialDelaySeconds: 2
-          periodSeconds: 2
+            port: 81
+          initialDelaySeconds: 5
+          periodSeconds: 5

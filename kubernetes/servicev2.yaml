@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: test-server
+  name: test-server-v2
   labels:
     app: test-server
-    version: v1
+    version: v2
 spec:
   type: LoadBalancer
   ports:
