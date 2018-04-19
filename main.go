@@ -56,6 +56,10 @@ func main() {
 			servers[cfg.servingPort].HandleFunc(echoPath, echo)
 			servers[cfg.healthCheckPort].HandleFunc(healthPath, health(cfg.healthy))
 			servers[cfg.livenessPort].HandleFunc(livePath, live(cfg.livenessDelay))
+			// For each of the servers, wire up a default handler so we can respond to any URL
+			for _, server := range servers {
+				server.HandleFunc("/", catchall)
+			}
 
 			log.Printf("listening for:\n/echo:     %d\n/health:   %d\n/liveness: %d\n", cfg.servingPort, cfg.healthCheckPort, cfg.livenessPort)
 
@@ -121,6 +125,15 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.Write(body)
+}
+
+func catchall(w http.ResponseWriter, r *http.Request) {
+	log.Printf("got catch-all request with headers:    %v\n", r.Header)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.Write([]byte(fmt.Sprintf("default handler echoing: %q", body)))
 }
 
 func toAddress(port uint16) string {

@@ -14,6 +14,7 @@
 
 HUB := gcr.io/google.com/zbutcher-test
 SHELL := /bin/bash
+ISTIO_DIR := ./istio-0.6.0
 
 default: build
 
@@ -39,12 +40,12 @@ docker.push: docker.build
 ##### Kube Deploy
 
 deploy:
-	kubectl apply -f <(./istio-0.5.1/bin/istioctl kube-inject -f kubernetes/deployment.yaml)
+	kubectl apply -f <(${ISTIO_DIR}/bin/istioctl kube-inject -f kubernetes/deployment.yaml)
 	kubectl apply -f kubernetes/service.yaml
 	kubectl apply -f kubernetes/ingress.yaml
 
 deploy.istio:
-	kubectl apply -f ./istio-0.5.1/install/kubernetes/istio.yaml
+	kubectl apply -f ${ISTIO_DIR}/install/kubernetes/istio.yaml
 
 deploy-all: deploy.istio deploy
 
@@ -54,6 +55,6 @@ remove:
 	kubectl delete -f kubernetes/ || true
 
 remove.istio:
-	kubectl delete -f ./istio-0.5.1/install/kubernetes/istio.yaml || true
+	kubectl delete -f ${ISTIO_DIR}/install/kubernetes/istio.yaml || true
 
 remove-all: remove remove.istio
