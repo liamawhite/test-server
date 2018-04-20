@@ -13,8 +13,10 @@
 ## limitations under the License.
 
 HUB := gcr.io/google.com/zbutcher-test
-SHELL := /bin/bash
-ISTIO_DIR := ./istio-0.6.0
+TAG := 6e646bb0accd3a7b3beac52f2bd402d39f861108
+
+SHELL := /bin/zsh
+ISTIO_DIR := ./istio-0.8.0
 
 default: build
 
@@ -40,7 +42,9 @@ docker.push: docker.build
 ##### Kube Deploy
 
 deploy:
-	kubectl apply -f <(${ISTIO_DIR}/bin/istioctl kube-inject -f kubernetes/deployment.yaml)
+	kubectl apply -f <( \
+	  ${ISTIO_DIR}/bin/istioctl kube-inject --hub=${HUB} --tag=${TAG} -f kubernetes/deployment.yaml | \
+	  sed -e "s,gcr.io/google.com/zbutcher-test/proxy:,gcr.io/google.com/zbutcher-test/proxyv2:,g")
 	kubectl apply -f kubernetes/service.yaml
 	kubectl apply -f kubernetes/ingress.yaml
 
