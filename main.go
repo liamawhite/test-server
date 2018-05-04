@@ -136,12 +136,14 @@ func call(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("got err reading body: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	log.Printf("got call target: %q", target)
 	resp, err := http.Get(fmt.Sprintf("%s", target))
 	if err != nil {
 		fmt.Fprintf(w, "GET %q failed: %v", fmt.Sprintf("%s", target), err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	log.Printf("GET %q succeeded with response code %v", target, resp.StatusCode)
 	fmt.Fprintf(w, "got response: %v", resp)
