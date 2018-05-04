@@ -31,6 +31,7 @@ const (
 	healthPath         = "/health"
 	echoPath           = "/echo"
 	livePath           = "/live"
+	callPath           = "/call"
 )
 
 type config struct {
@@ -46,14 +47,14 @@ func main() {
 		Use:   "server",
 		Short: "Starts Mixer as a server",
 		Run: func(cmd *cobra.Command, args []string) {
-			servers := make(map[uint16]*http.ServeMux)
-			for _, port := range []uint16{cfg.servingPort, cfg.healthCheckPort, cfg.livenessPort} {
-				if _, found := servers[port]; !found {
-					servers[port] = http.NewServeMux()
-				}
+			servers := map[uint16]*http.ServeMux{
+				cfg.servingPort:     http.NewServeMux(),
+				cfg.healthCheckPort: http.NewServeMux(),
+				cfg.livenessPort:    http.NewServeMux(),
 			}
 
 			servers[cfg.servingPort].HandleFunc(echoPath, echo)
+			servers[cfg.servingPort].HandleFunc(callPath, call)
 			servers[cfg.healthCheckPort].HandleFunc(healthPath, health(cfg.healthy))
 			servers[cfg.livenessPort].HandleFunc(livePath, live(cfg.livenessDelay))
 			// For each of the servers, wire up a default handler so we can respond to any URL
@@ -122,9 +123,28 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	log.Printf("got echo request with headers:         %v\n", r.Header)
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.Printf("got err reading body: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.Write(body)
+}
+
+func call(w http.ResponseWriter, r *http.Request) {
+	log.Printf("got call request with headers: %v", r.Header)
+	target, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		log.Printf("got err reading body: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	log.Printf("got call target: %q", target)
+	resp, err := http.Get(fmt.Sprintf("%s", target))
+	if err != nil {
+		fmt.Fprintf(w, "GET %q failed: %v", fmt.Sprintf("%s", target), err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	log.Printf("GET %q succeeded with response code %v", target, resp.StatusCode)
+	fmt.Fprintf(w, "got response: %v", resp)
 }
 
 func catchall(w http.ResponseWriter, r *http.Request) {

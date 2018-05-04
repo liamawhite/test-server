@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: test-server-v2
+  labels:
+    app: test-server
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: test-server
+        version: v2
+    spec:
+      containers:
+      - name: test-server
+        image: gcr.io/google.com/zbutcher-test/test-server
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        - containerPort: 81
+        args:
+        - --server-port=80
+        - --health-port=81
+        - --liveness-port=81
+        # update to make the health check return unhealthy
+        - --healthy=true
+        # update to make liveness checks take longer before returning a 200
+        - --liveness-delay=0s
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: 81
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 81
+          initialDelaySeconds: 5
+          periodSeconds: 5
