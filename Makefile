@@ -12,8 +12,10 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-HUB := gcr.io/google.com/zbutcher-test
-TAG := 6e646bb0accd3a7b3beac52f2bd402d39f861108
+HUB := zackbutcher
+
+ISTIO_HUB := gcr.io/google.com/zbutcher-test
+ISTIO_TAG := 6e646bb0accd3a7b3beac52f2bd402d39f861108
 
 SHELL := /bin/zsh
 ISTIO_DIR := ./istio-0.8.0
@@ -37,17 +39,17 @@ docker.run: docker.build
 	docker run ${HUB}/test-server
 
 docker.push: docker.build
-	gcloud docker -- push ${HUB}/test-server
+	docker push ${HUB}/test-server
 
 ##### Kube Deploy
 
 deploy:
 	kubectl apply -f <( \
-	  ${ISTIO_DIR}/bin/istioctl kube-inject --hub=${HUB} --tag=${TAG} -f kubernetes/deployment.yaml | \
-	  sed -e "s,gcr.io/google.com/zbutcher-test/proxy:,gcr.io/google.com/zbutcher-test/proxyv2:,g")
+	  ${ISTIO_DIR}/bin/istioctl kube-inject --hub=${ISTIO_HUB} --tag=${ISTIO_TAG} -f kubernetes/deployment.yaml | \
+	  sed -e "s,${ISTIO_HUB}/proxy:,${ISTIO_HUB}/proxyv2:,g")
 	kubectl apply -f <( \
-	  ${ISTIO_DIR}/bin/istioctl kube-inject --hub=${HUB} --tag=${TAG} -f kubernetes/deployment-v2.yaml | \
-	  sed -e "s,gcr.io/google.com/zbutcher-test/proxy:,gcr.io/google.com/zbutcher-test/proxyv2:,g")
+	  ${ISTIO_DIR}/bin/istioctl kube-inject --hub=${ISTIO_HUB} --tag=${ISTIO_TAG} -f kubernetes/deployment-v2.yaml | \
+	  sed -e "s,${ISTIO_HUB}/proxy:,${ISTIO_HUB}/proxyv2:,g")
 	kubectl apply -f kubernetes/service.yaml
 	kubectl apply -f kubernetes/service-v2.yaml
 	kubectl apply -f kubernetes/ingress.yaml
