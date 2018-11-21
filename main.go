@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -139,14 +140,22 @@ func call(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("got call target: %q", target)
-	resp, err := http.Get(fmt.Sprintf("%s", target))
+	req, err := http.NewRequest("GET", "http://127.0.0.1/echo", bytes.NewBufferString("Success!"))
+	if err != nil {
+		fmt.Fprintf(w, "GET %q failed: %v", fmt.Sprintf("%s", target), err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	req.Host = string(target)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		fmt.Fprintf(w, "GET %q failed: %v", fmt.Sprintf("%s", target), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	log.Printf("GET %q succeeded with response code %v", target, resp.StatusCode)
-	fmt.Fprintf(w, "got response: %v", resp)
+	bodyByte, _ := ioutil.ReadAll(resp.Body)
+	fmt.Fprintf(w, "got response: %v, body: %v", resp, string(bodyByte))
 }
 
 func catchall(w http.ResponseWriter, r *http.Request) {
